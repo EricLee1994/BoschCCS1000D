@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BoschCCS1000D</string>
+    <string name="netException">无网络连接，请检查</string>
+</resources>
