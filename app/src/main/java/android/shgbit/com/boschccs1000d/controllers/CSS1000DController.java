@@ -2,6 +2,7 @@ package android.shgbit.com.boschccs1000d.controllers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.shgbit.com.boschccs1000d.activity.MainActivity;
 import android.shgbit.com.boschccs1000d.base.BaseApp;
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
 import android.shgbit.com.boschccs1000d.http.IHttpCallback;
@@ -35,7 +36,7 @@ import java.util.Map;
 /**
  * Created by user on 2016-12-13.
  */
-public class CSS1000DController {
+public class CSS1000DController implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     Context context;
     public String TAG = "Controller";
@@ -52,11 +53,14 @@ public class CSS1000DController {
 
     public void Open() {
         // Login Request
-//        SharedPreferences perf = context.getSharedPreferences("config", Context.MODE_PRIVATE);
-//        String mLoginUsername = perf.getString("username","");
-//        String mLoginPassword = perf.getString("password","");
+        SharedPreferences config = BaseApp.appContext.getSharedPreferences("config", Context.MODE_PRIVATE);
+        String mLoginUsername = config.getString("username","");
+        String mLoginPassword = config.getString("password","");
+        if (!mLoginUsername.isEmpty()&&!mLoginPassword.isEmpty()) {
 
-        LoginRequest mLoginRequest = new LoginRequest(context, "test", "test");
+        }
+        config.registerOnSharedPreferenceChangeListener(this);
+        LoginRequest mLoginRequest = new LoginRequest(context, mLoginUsername, mLoginPassword);
         mLoginRequest.httpSend(new IHttpCallback() {
 
             @Override
@@ -463,4 +467,8 @@ public class CSS1000DController {
         // Close TCP
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+
+    }
 }

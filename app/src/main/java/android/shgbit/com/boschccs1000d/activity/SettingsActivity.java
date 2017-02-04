@@ -1,5 +1,6 @@
-package android.shgbit.com.boschccs1000d;
+package android.shgbit.com.boschccs1000d.activity;
 
+import android.shgbit.com.boschccs1000d.R;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.EditText;

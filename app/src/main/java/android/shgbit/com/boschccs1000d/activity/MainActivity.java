@@ -1,7 +1,9 @@
-package android.shgbit.com.boschccs1000d;
+package android.shgbit.com.boschccs1000d.activity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.shgbit.com.boschccs1000d.R;
+import android.shgbit.com.boschccs1000d.base.BaseApp;
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
 import android.shgbit.com.boschccs1000d.controllers.CSS1000DController;
 import android.shgbit.com.boschccs1000d.controllers.TCPNoticeTrace;
@@ -31,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mBtnSysinfo;
     private Button mBtnShortSeats;
     private Button mBtnLongSeats;
-//speaker
+    //speaker
     private Button mBtnShortSpkAvail;
     private Button mBtnLongSpkAvail;
     private Button mBtnShortSpkGet;
@@ -39,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mBtnSpkPost;
     private Button mBtnSpkDel;
     private Button mBtnSpkDelid;
-//wait-list
+    //wait-list
     private Button mBtnLongWaitAvail;
     private Button mBtnShortWaitAvail;
     private Button mBtnLongWaitGet;
@@ -67,40 +69,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         initBtnView();
+        initData();
 
-        init();
         mCss1000dController.Open();
     }
 
-    public void init(){
+    public void initData(){
         BaseMgr.CCSD_ADDR = mEdtCCSAddr.getText().toString();
         Log.i(TAG, "CCSD_ADDR"+ BaseMgr.CCSD_ADDR);
         String USERNAME = mEdtUsername.getText().toString();
         String PASSWORD = mEdtPassword.getText().toString();
-        SharedPreferences sp = getSharedPreferences("config", MODE_PRIVATE);
-        SharedPreferences.Editor  editor = sp.edit();
-        editor.putString("username","test");
-        editor.putString("password","test");
+        SharedPreferences config = BaseApp.appContext.getSharedPreferences("config", MODE_PRIVATE);
+        SharedPreferences.Editor  editor = config.edit();
+        editor.putString("username", USERNAME);
+        editor.putString("password", PASSWORD);
         editor.commit();
     }
 
     public void initBtnView(){
+        //base info
         mEdtCentAddr = (EditText) findViewById(R.id.edtCent);
         mEdtCentPort = (EditText) findViewById(R.id.edtCentPort);
         mEdtCCSAddr = (EditText) findViewById(R.id.edtCCSAddr);
-
+        mEdtUsername = (EditText) findViewById(R.id.etUsername);
+        mEdtPassword = (EditText) findViewById(R.id.etPassword);
+        //btn
         mBtnLogin = (Button) findViewById(R.id.btnLogin);
         mBtnLogout = (Button) findViewById(R.id.btnLogout);
-
-        mLogListView = (ListView) findViewById(R.id.LogListView);
-        Map<String, Object> map=new HashMap<String, Object>();
-        map.put("info", "日志开启！");
-        BaseMgr.LOGLIST.add(map);
-        logAdapter = new LogAdapter(this, BaseMgr.LOGLIST);
-        mLogListView.setAdapter(logAdapter);
-        mLogListView.setEnabled(false);
-
         mBtnSysinfo = (Button) findViewById(R.id.btnSysInfo);
+        mBtnInit = (Button) findViewById(R.id.btnInit);
+        mBtnSendTrace = (Button) findViewById(R.id.btnSendTCP);
 //        mBtnShortSeats = (Button) findViewById(R.id.btnShortSeats);
 //        mBtnLongSeats = (Button) findViewById(R.id.btnLongSeats);
 ////speaker
@@ -120,11 +118,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        mBtnWaitDel = (Button) findViewById(R.id.btnWaitDel);
 //        mBtnWaitDelid = (Button) findViewById(R.id.btnWaitDelID);
 //
-        mBtnInit = (Button) findViewById(R.id.btnInit);
-        mBtnSendTrace = (Button) findViewById(R.id.btnSendTCP);
-
-        mEdtUsername = (EditText) findViewById(R.id.etUsername);
-        mEdtPassword = (EditText) findViewById(R.id.etPassword);
+        //Log
+        mLogListView = (ListView) findViewById(R.id.LogListView);
+        Map<String, Object> map=new HashMap<String, Object>();
+        map.put("info", "日志开启！");
+        BaseMgr.LOGLIST.add(map);
+        logAdapter = new LogAdapter(this, BaseMgr.LOGLIST);
+        mLogListView.setAdapter(logAdapter);
+        mLogListView.setEnabled(false);
 
         noticeTrace = TCPNoticeTrace.getInstance();
 
@@ -152,10 +153,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 noticeTrace.Notice(msg);
             }
         });
-
-        // Read Config
-
-        // CSS1000DController Open
 
         mBtnLogin.setOnClickListener(this);
         mBtnSysinfo.setOnClickListener(this);

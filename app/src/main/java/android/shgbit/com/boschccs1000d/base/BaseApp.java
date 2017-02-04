@@ -10,7 +10,7 @@ import org.xutils.x;
  */
 public class BaseApp extends Application{
 
-    private static Context appContext;
+    public static Context appContext;
     private static String PACKAGE_NAME;
 
     @Override
