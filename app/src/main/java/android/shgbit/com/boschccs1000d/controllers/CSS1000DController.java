@@ -2,10 +2,12 @@ package android.shgbit.com.boschccs1000d.controllers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Message;
 import android.shgbit.com.boschccs1000d.activity.MainActivity;
 import android.shgbit.com.boschccs1000d.base.BaseApp;
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
 import android.shgbit.com.boschccs1000d.http.IHttpCallback;
+import android.shgbit.com.boschccs1000d.http.IInfoCallback;
 import android.shgbit.com.boschccs1000d.http.account.DeleteWaitRequest;
 import android.shgbit.com.boschccs1000d.http.account.LoginRequest;
 import android.shgbit.com.boschccs1000d.http.account.LogoutRequest;
@@ -29,6 +31,8 @@ import com.google.gson.JsonParser;
 import org.json.JSONArray;
 
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -40,8 +44,6 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
 
     Context context;
     public String TAG = "Controller";
-//    BaseApp mBaseApp = new BaseApp();
-//    Context mControllerContext = mBaseApp.getApplicationContext();
 
     public CSS1000DController() {
 
@@ -54,13 +56,28 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
     public void Open() {
         // Login Request
         SharedPreferences config = BaseApp.appContext.getSharedPreferences("config", Context.MODE_PRIVATE);
-        String mLoginUsername = config.getString("username","");
-        String mLoginPassword = config.getString("password","");
-        if (!mLoginUsername.isEmpty()&&!mLoginPassword.isEmpty()) {
-
+        String USERNAME = config.getString("username", "");
+        String PASSWORD = config.getString("password", "");
+        String CSSDADDR = config.getString("cssaddr", "");
+        String CENTPORT = config.getString("centport", "");
+        String CENTADDR = config.getString("centaddr", "");
+        if (!USERNAME.isEmpty()&&!PASSWORD.isEmpty()&&!CSSDADDR.isEmpty()&&!CENTADDR.isEmpty()&&!CENTPORT.isEmpty()) {
+            User.UserName = USERNAME;
+            User.Password = PASSWORD;
+            BaseMgr.CCSD_ADDR = CSSDADDR;
+            BaseMgr.CENTADDR = CENTADDR;
+            BaseMgr.CENTPORT = CENTPORT;
+            iInfoCallback.onUIChange(User.UserName, User.Password, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
         }
+        Date curDate = new Date(System.currentTimeMillis());
+        Map<String, Object> map = new HashMap<>();
+        map.put("info", "ConfigCheck "+" Username:"+User.UserName + " Password:" + User.Password + " CCSD_ADDR:" + BaseMgr.CCSD_ADDR + " CentAddr:" +
+                BaseMgr.CENTADDR + " CentPort:" + BaseMgr.CENTPORT);
+        map.put("time",  BaseMgr.FOMAT.format(curDate));
+        BaseMgr.LOGLIST.add(map);
+
         config.registerOnSharedPreferenceChangeListener(this);
-        LoginRequest mLoginRequest = new LoginRequest(context, mLoginUsername, mLoginPassword);
+        LoginRequest mLoginRequest = new LoginRequest(context, USERNAME, PASSWORD);
         mLoginRequest.httpSend(new IHttpCallback() {
 
             @Override
@@ -68,16 +85,20 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
                 Log.e(TAG, "OpenSuccess" + result);
                 User user = new GsonBuilder().create().fromJson(result, User.class);
                 BaseMgr.SESSIONID = user.getSid();
+                Date curDate = new Date(System.currentTimeMillis());
                 Map<String, Object> map=new HashMap<String, Object>();
                 map.put("info", result);
+                map.put("time", BaseMgr.FOMAT.format(curDate));
                 BaseMgr.LOGLIST.add(map);
             }
 
             @Override
             public void onFailure(String result) {
                 Log.e(TAG, "OpenFailure" + result);
+                Date curDate = new Date(System.currentTimeMillis());
                 Map<String, Object> map=new HashMap<String, Object>();
                 map.put("info", result);
+                map.put("time", BaseMgr.FOMAT.format(curDate));
                 BaseMgr.LOGLIST.add(map);
             }
         });
@@ -187,6 +208,11 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
             @Override
             public void onSuccess(String result) {
                 Log.e("avail", result);
+                Date curDate = new Date(System.currentTimeMillis());
+                Map<String, Object> map=new HashMap<String, Object>();
+                map.put("info", result);
+                map.put("time", BaseMgr.FOMAT.format(curDate));
+                BaseMgr.LOGLIST.add(map);
                 getShortSpkAvail();
             }
 
@@ -229,14 +255,23 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
                     SpkEntry spkEntry = null;
                     JsonElement e = (JsonElement) it.next();
                     spkEntry = gson.fromJson(e, SpkEntry.class);
-
+                    BaseMgr.POINTID = spkEntry.getId();
                 }
                 getShortSpk();
+                Date curDate = new Date(System.currentTimeMillis());
+                Map<String, Object> map=new HashMap<String, Object>();
+                map.put("info", "获取当前发言话筒id：" + BaseMgr.POINTID);
+                map.put("time", BaseMgr.FOMAT.format(curDate));
+                BaseMgr.LOGLIST.add(map);
             }
 
             @Override
             public void onFailure(String result) {
-
+                Date curDate = new Date(System.currentTimeMillis());
+                Map<String, Object> map=new HashMap<String, Object>();
+                map.put("info", result);
+                map.put("time", BaseMgr.FOMAT.format(curDate));
+                BaseMgr.LOGLIST.add(map);
             }
         });
 
@@ -456,19 +491,48 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
             @Override
             public void onSuccess(String result) {
                 BaseMgr.SESSIONID = "";
+                Date curDate = new Date(System.currentTimeMillis());
+                Map<String, Object> map=new HashMap<String, Object>();
+                map.put("info", result);
+                map.put("time", BaseMgr.FOMAT.format(curDate));
+                BaseMgr.LOGLIST.add(map);
             }
 
             @Override
             public void onFailure(String result) {
+                Date curDate = new Date(System.currentTimeMillis());
+                Map<String, Object> map=new HashMap<String, Object>();
+                map.put("info", result);
+                map.put("time", BaseMgr.FOMAT.format(curDate));
+                BaseMgr.LOGLIST.add(map);
 
             }
         });
 
         // Close TCP
     }
-
+    public IInfoCallback iInfoCallback = null;
+    public void setIInfoCallback (IInfoCallback infocallbak){
+        iInfoCallback = infocallbak;
+    }
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("username")) {
+            User.UserName = sharedPreferences.getString("username", "");
+        }
+        if (key.equals("password")) {
+            User.Password = sharedPreferences.getString("password", "");
+        }
+        if (key.equals("cssaddr")) {
+            BaseMgr.CCSD_ADDR = sharedPreferences.getString("cssaddr", "");
+        }
+        if (key.equals("centaddr")) {
+            BaseMgr.CENTADDR = sharedPreferences.getString("centaddr", "");
+        }
+        if (key.equals("centport")) {
+            BaseMgr.CENTPORT = sharedPreferences.getString("centport", "");
+        }
+        Log.e(TAG, User.UserName + User.Password);
+        iInfoCallback.onUIChange(User.UserName, User.Password, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
     }
 }

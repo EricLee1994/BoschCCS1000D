@@ -2,6 +2,7 @@ package android.shgbit.com.boschccs1000d.base;
 
 import android.app.Application;
 import android.content.Context;
+import android.shgbit.com.boschccs1000d.utils.CrashHandler;
 
 import org.xutils.x;
 
@@ -22,6 +23,9 @@ public class BaseApp extends Application{
         if(BaseConst.isDebug) {
             // 设置异常crash操作处理
         }
+
+        CrashHandler crashHandler = CrashHandler.getInstance();
+        crashHandler.init(appContext);
 
         PACKAGE_NAME = getPackageName();
 

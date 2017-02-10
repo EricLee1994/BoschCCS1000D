@@ -62,6 +62,7 @@ public class LogAdapter extends BaseAdapter {
         }
 
         element.tvLog.setText((String) mLogList.get(i).get("info"));
+        element.tvTime.setText((String) mLogList.get(i).get("time"));
         return view;
     }
 }
