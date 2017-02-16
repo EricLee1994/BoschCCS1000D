@@ -6,10 +6,8 @@ import android.shgbit.com.boschccs1000d.R;
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
 import android.shgbit.com.boschccs1000d.controllers.CSS1000DController;
 import android.shgbit.com.boschccs1000d.controllers.TCPNoticeTrace;
-import android.shgbit.com.boschccs1000d.http.IInfoCallback;
 import android.shgbit.com.boschccs1000d.models.User;
-import android.shgbit.com.boschccs1000d.utils.DSLog;
-import android.shgbit.com.boschccs1000d.utils.LogAdapter;
+import android.shgbit.com.boschccs1000d.adapter.LogAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,6 +18,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,7 +52,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         initBtnView();
         initData();
-        DSLog.d(TAG, "open");
+        initTcpClient();
+        initTrace();
+
+    }
+    public void initTrace(){
+        if(isInited == true) {
+            ITraceCallback iTraceCallback = new ITraceCallback() {
+                @Override
+                public void onSendId(int mPointId) {
+                    String msg = String.format("M%03d", mPointId);
+                    noticeTrace.Notice(msg);
+                }
+            };
+            mCss1000dController.setITraceCallback(iTraceCallback);
+        }
+    }
+
+    public void initTcpClient(){
+        try {
+            new Thread(new TCPClient()).start();
+            Date curDate = new Date(System.currentTimeMillis());
+            Map<String, Object> map=new HashMap<String, Object>();
+            map.put("info", "initTrace successfully!");
+            map.put("time", BaseMgr.FOMAT.format(curDate));
+            BaseMgr.LOGLIST.add(map);
+        }catch (UnknownError e){
+            Date curDate = new Date(System.currentTimeMillis());
+            Map<String, Object> map=new HashMap<String, Object>();
+            map.put("info", "initTrace failed!");
+            map.put("time", BaseMgr.FOMAT.format(curDate));
+            BaseMgr.LOGLIST.add(map);
+        }
+
     }
 
     public void initData(){
@@ -62,8 +93,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BaseMgr.CCSD_ADDR = mEdtCCSAddr.getText().toString();
         BaseMgr.CENTPORT = mEdtCentPort.getText().toString();
         BaseMgr.CENTADDR = mEdtCentAddr.getText().toString();
-        User.UserName = mEdtUsername.getText().toString();
-        User.Password = mEdtPassword.getText().toString();
+        User.USERNAME = mEdtUsername.getText().toString();
+        User.PASSWORD = mEdtPassword.getText().toString();
 
     }
 
@@ -113,20 +144,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mImageView.setOnClickListener(this);
 
-        IInfoCallback iInfoCallback = new IInfoCallback() {
+        IInfoCallback infoCallback = new IInfoCallback() {
             @Override
-            public void onUIChange(String UserName, String Password, String CssdAddr, String CentAddr, String CentPort) {
-                mEdtUsername.setText(UserName);
-                mEdtPassword.setText(Password);
-                mEdtCCSAddr.setText(CssdAddr);
-                mEdtCentAddr.setText(CentAddr);
-                mEdtCentPort.setText(CentPort);
+            public void onUIChange(String mUserName, String mPassword, String mCssdAddr, String mCentAddr, String mCentPort) {
+                mEdtUsername.setText(mUserName);
+                mEdtPassword.setText(mPassword);
+                mEdtCCSAddr.setText(mCssdAddr);
+                mEdtCentAddr.setText(mCentAddr);
+                mEdtCentPort.setText(mCentPort);
 
                 Log.e(TAG, "UIChange");
             }
 
         };
-        mCss1000dController.setIInfoCallback(iInfoCallback);
+        mCss1000dController.setIInfoCallback(infoCallback);
     }
 
     CSS1000DController mCss1000dController = new CSS1000DController(context);
@@ -164,7 +195,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onPause() {
         super.onPause();
         mCss1000dController.Close();
-        noticeTrace.Close();
+        if (isInited = true) {
+            noticeTrace.Close();
+        }
         // CSS1000DController Stop
     }
 
@@ -183,9 +216,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             boolean ret = noticeTrace.Open(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
             if (!ret) {
                 Log.e("ZMG", "Connect with Server failed.");
+                isInited = false;
             } else {
                 isInited = true;
             }
         }
+    }
+
+    public interface IInfoCallback {
+        void onUIChange(String mUserName, String mPassword, String mCssdAddr, String mCentAddr, String mCentPort);
+    }
+
+    public interface ITraceCallback{
+        void onSendId(int mPointId);
     }
 }

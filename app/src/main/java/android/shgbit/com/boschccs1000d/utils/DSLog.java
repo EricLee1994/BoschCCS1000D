@@ -19,7 +19,7 @@ public class DSLog {
 	public static final int SIZETYPE_MB = 3;// 获取文件大小单位为MB的double值
 	public static final int SIZETYPE_GB = 4;// 获取文件大小单位为GB的double值
 
-	public static String filepath = null;
+	public static String filepath = "/sdcard/BoschCCS/Log";
 	public static boolean needOutput = true;
 
 	private static ArrayList<String> list = new ArrayList<String>();
@@ -123,7 +123,7 @@ public class DSLog {
 		String log = now.format3339(false) + " " + strLevel + " " + tag + " " + msg;
 
 		try {
-
+			Log.e(TAG, "1");
 			if (needOutput == true && level >= INFO) {
 				setFileNum();
 				String filename = filepath + "/log-" + now.format("%Y%m%d") + ".txt";

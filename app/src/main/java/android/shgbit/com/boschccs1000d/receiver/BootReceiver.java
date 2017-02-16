@@ -1,8 +1,9 @@
-package android.shgbit.com.boschccs1000d.activity;
+package android.shgbit.com.boschccs1000d.receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.shgbit.com.boschccs1000d.activity.MainActivity;
 
 /**
  * Created by Eric on 2017/2/8.

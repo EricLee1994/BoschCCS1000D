@@ -55,8 +55,8 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-        mEdtUsername.setText(User.UserName);
-        mEdtPassword.setText(User.Password);
+        mEdtUsername.setText(User.USERNAME);
+        mEdtPassword.setText(User.PASSWORD);
         mEdtCCSAddr.setText(BaseMgr.CCSD_ADDR);
         mEdtCentAddr.setText(BaseMgr.CENTADDR);
         mEdtCentPort.setText(BaseMgr.CENTPORT);

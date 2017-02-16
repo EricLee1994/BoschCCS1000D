@@ -2,24 +2,23 @@ package android.shgbit.com.boschccs1000d.controllers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Message;
 import android.shgbit.com.boschccs1000d.activity.MainActivity;
 import android.shgbit.com.boschccs1000d.base.BaseApp;
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
-import android.shgbit.com.boschccs1000d.http.IHttpCallback;
-import android.shgbit.com.boschccs1000d.http.IInfoCallback;
-import android.shgbit.com.boschccs1000d.http.account.DeleteWaitRequest;
-import android.shgbit.com.boschccs1000d.http.account.LoginRequest;
-import android.shgbit.com.boschccs1000d.http.account.LogoutRequest;
-import android.shgbit.com.boschccs1000d.http.account.SeatsRequest;
-import android.shgbit.com.boschccs1000d.http.account.SpeakersRequest;
-import android.shgbit.com.boschccs1000d.http.account.SpkAvailRequest;
-import android.shgbit.com.boschccs1000d.http.account.SpkDelRequest;
-import android.shgbit.com.boschccs1000d.http.account.SysInfoRequest;
-import android.shgbit.com.boschccs1000d.http.account.WaitListAvailRequest;
-import android.shgbit.com.boschccs1000d.http.account.WaitListRequest;
+import android.shgbit.com.boschccs1000d.request.waitlist.DeleteWaitRequest;
+import android.shgbit.com.boschccs1000d.request.account.LoginRequest;
+import android.shgbit.com.boschccs1000d.request.account.LogoutRequest;
+import android.shgbit.com.boschccs1000d.request.info.SeatsRequest;
+import android.shgbit.com.boschccs1000d.request.speaker.SpeakersRequest;
+import android.shgbit.com.boschccs1000d.request.speaker.SpkAvailRequest;
+import android.shgbit.com.boschccs1000d.request.speaker.SpkDelRequest;
+import android.shgbit.com.boschccs1000d.request.info.SysInfoRequest;
+import android.shgbit.com.boschccs1000d.request.waitlist.WaitListAvailRequest;
+import android.shgbit.com.boschccs1000d.request.waitlist.WaitListRequest;
 import android.shgbit.com.boschccs1000d.models.SpkEntry;
 import android.shgbit.com.boschccs1000d.models.User;
+import android.shgbit.com.boschccs1000d.base.BaseRequest.IHttpCallback;
+import android.shgbit.com.boschccs1000d.activity.MainActivity.IInfoCallback;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -30,8 +29,6 @@ import com.google.gson.JsonParser;
 
 import org.json.JSONArray;
 
-import java.lang.reflect.Array;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -62,16 +59,16 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
         String CENTPORT = config.getString("centport", "");
         String CENTADDR = config.getString("centaddr", "");
         if (!USERNAME.isEmpty()&&!PASSWORD.isEmpty()&&!CSSDADDR.isEmpty()&&!CENTADDR.isEmpty()&&!CENTPORT.isEmpty()) {
-            User.UserName = USERNAME;
-            User.Password = PASSWORD;
+            User.USERNAME = USERNAME;
+            User.PASSWORD = PASSWORD;
             BaseMgr.CCSD_ADDR = CSSDADDR;
             BaseMgr.CENTADDR = CENTADDR;
             BaseMgr.CENTPORT = CENTPORT;
-            iInfoCallback.onUIChange(User.UserName, User.Password, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
+            infoCallback.onUIChange(User.USERNAME, User.PASSWORD, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
         }
         Date curDate = new Date(System.currentTimeMillis());
         Map<String, Object> map = new HashMap<>();
-        map.put("info", "ConfigCheck "+" Username:"+User.UserName + " Password:" + User.Password + " CCSD_ADDR:" + BaseMgr.CCSD_ADDR + " CentAddr:" +
+        map.put("info", "ConfigCheck "+" Username:"+User.USERNAME + " Password:" + User.PASSWORD + " CCSD_ADDR:" + BaseMgr.CCSD_ADDR + " CentAddr:" +
                 BaseMgr.CENTADDR + " CentPort:" + BaseMgr.CENTPORT);
         map.put("time",  BaseMgr.FOMAT.format(curDate));
         BaseMgr.LOGLIST.add(map);
@@ -257,6 +254,7 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
                     spkEntry = gson.fromJson(e, SpkEntry.class);
                     BaseMgr.POINTID = spkEntry.getId();
                 }
+                TraceCallback.onSendId(BaseMgr.POINTID);
                 getShortSpk();
                 Date curDate = new Date(System.currentTimeMillis());
                 Map<String, Object> map=new HashMap<String, Object>();
@@ -511,17 +509,17 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
 
         // Close TCP
     }
-    public IInfoCallback iInfoCallback = null;
+    public IInfoCallback infoCallback = null;
     public void setIInfoCallback (IInfoCallback infocallbak){
-        iInfoCallback = infocallbak;
+        infoCallback = infocallbak;
     }
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("username")) {
-            User.UserName = sharedPreferences.getString("username", "");
+            User.USERNAME = sharedPreferences.getString("username", "");
         }
         if (key.equals("password")) {
-            User.Password = sharedPreferences.getString("password", "");
+            User.PASSWORD = sharedPreferences.getString("password", "");
         }
         if (key.equals("cssaddr")) {
             BaseMgr.CCSD_ADDR = sharedPreferences.getString("cssaddr", "");
@@ -532,7 +530,12 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
         if (key.equals("centport")) {
             BaseMgr.CENTPORT = sharedPreferences.getString("centport", "");
         }
-        Log.e(TAG, User.UserName + User.Password);
-        iInfoCallback.onUIChange(User.UserName, User.Password, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
+        Log.e(TAG, User.USERNAME + User.PASSWORD);
+        infoCallback.onUIChange(User.USERNAME, User.PASSWORD, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
+    }
+
+    public MainActivity.ITraceCallback TraceCallback = null;
+    public void setITraceCallback(MainActivity.ITraceCallback iTraceCallback){
+        TraceCallback = iTraceCallback;
     }
 }

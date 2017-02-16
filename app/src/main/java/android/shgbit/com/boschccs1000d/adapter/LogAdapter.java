@@ -1,4 +1,4 @@
-package android.shgbit.com.boschccs1000d.utils;
+package android.shgbit.com.boschccs1000d.adapter;
 
 import android.content.Context;
 import android.shgbit.com.boschccs1000d.R;

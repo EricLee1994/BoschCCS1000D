@@ -1,12 +1,12 @@
 package android.shgbit.com.boschccs1000d.controllers;
 
 import android.content.Context;
-import android.shgbit.com.boschccs1000d.http.IHttpCallback;
-import android.shgbit.com.boschccs1000d.http.account.SeatsRequest;
-import android.shgbit.com.boschccs1000d.http.account.SpeakersRequest;
-import android.shgbit.com.boschccs1000d.http.account.SpkAvailRequest;
-import android.shgbit.com.boschccs1000d.http.account.WaitListAvailRequest;
-import android.shgbit.com.boschccs1000d.http.account.WaitListRequest;
+import android.shgbit.com.boschccs1000d.request.info.SeatsRequest;
+import android.shgbit.com.boschccs1000d.request.speaker.SpeakersRequest;
+import android.shgbit.com.boschccs1000d.request.speaker.SpkAvailRequest;
+import android.shgbit.com.boschccs1000d.request.waitlist.WaitListAvailRequest;
+import android.shgbit.com.boschccs1000d.request.waitlist.WaitListRequest;
+import android.shgbit.com.boschccs1000d.base.BaseRequest.IHttpCallback;
 import android.util.Log;
 
 import java.util.Timer;

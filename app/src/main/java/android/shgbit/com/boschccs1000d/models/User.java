@@ -7,8 +7,8 @@ public class User {
 
     private int id;
     private String sid;
-    public static String UserName;
-    public static String Password;
+    public static String USERNAME;
+    public static String PASSWORD;
 
     public int getId() {
         return id;

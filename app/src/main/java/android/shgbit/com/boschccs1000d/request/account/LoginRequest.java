@@ -1,8 +1,8 @@
-package android.shgbit.com.boschccs1000d.http.account;
+package android.shgbit.com.boschccs1000d.request.account;
 
 import android.content.Context;
 import android.shgbit.com.boschccs1000d.base.BaseConst;
-import android.shgbit.com.boschccs1000d.http.BaseRequest;
+import android.shgbit.com.boschccs1000d.base.BaseRequest;
 
 import org.xutils.http.HttpMethod;
 

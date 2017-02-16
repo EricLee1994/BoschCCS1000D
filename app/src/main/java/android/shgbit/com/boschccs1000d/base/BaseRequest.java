@@ -1,20 +1,13 @@
-package android.shgbit.com.boschccs1000d.http;
+package android.shgbit.com.boschccs1000d.base;
 
 import android.content.Context;
-import android.shgbit.com.boschccs1000d.R;
-import android.shgbit.com.boschccs1000d.base.BaseConst;
-import android.shgbit.com.boschccs1000d.base.BaseMgr;
-import android.shgbit.com.boschccs1000d.utils.CommonUtils;
-import android.shgbit.com.boschccs1000d.utils.ToastUtil;
 import android.util.Log;
 
 import org.xutils.common.Callback;
-import org.xutils.common.util.LogUtil;
 import org.xutils.http.HttpMethod;
 import org.xutils.http.RequestParams;
 import org.xutils.x;
 
-import java.net.SocketException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -110,6 +103,11 @@ public class BaseRequest {
                 BaseMgr.LOGLIST.add(map);
             }
         });
+    }
+
+    public interface IHttpCallback {
+        void onSuccess(String result);
+        void onFailure(String result);
     }
 
 }

@@ -24,8 +24,8 @@ public class BaseApp extends Application{
             // 设置异常crash操作处理
         }
 
-        CrashHandler crashHandler = CrashHandler.getInstance();
-        crashHandler.init(appContext);
+//        CrashHandler crashHandler = CrashHandler.getInstance();
+//        crashHandler.init(appContext);
 
         PACKAGE_NAME = getPackageName();
 
