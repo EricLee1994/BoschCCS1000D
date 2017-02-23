@@ -31,9 +31,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mEdtCCSAddr;
     private ImageView mImageView;
 
-
-    private Button mBtnInit;
-    private Button mBtnSendTrace;
     private TextView mEdtUsername;
     private TextView mEdtPassword;
 
@@ -42,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private TCPNoticeTrace noticeTrace;
     private boolean isInited = false;
+
+    CSS1000DController mCss1000dController = new CSS1000DController(context);
 
     private String TAG = "MainActivity";
 
@@ -160,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCss1000dController.setIInfoCallback(infoCallback);
     }
 
-    CSS1000DController mCss1000dController = new CSS1000DController(context);
+
 
     @Override
     public void onClick(View v) {

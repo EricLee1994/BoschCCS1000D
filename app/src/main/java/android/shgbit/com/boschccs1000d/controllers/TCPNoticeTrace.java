@@ -82,7 +82,7 @@ public class TCPNoticeTrace {
 
     public void Close() {
         try {
-            if (mTcpClient != null) {
+            if (mTcpClient != null && mDataStrm != null) {
                 isConnected = false;
                 mTcpClient.close();
                 mDataStrm.close();
