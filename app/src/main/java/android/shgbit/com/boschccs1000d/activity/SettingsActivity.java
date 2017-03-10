@@ -1,5 +1,6 @@
 package android.shgbit.com.boschccs1000d.activity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.shgbit.com.boschccs1000d.R;
 import android.shgbit.com.boschccs1000d.base.BaseApp;
@@ -51,7 +52,10 @@ public class SettingsActivity extends AppCompatActivity {
                 editor.putString("centport", CENTPORT);
                 editor.putString("cssaddr", CCSDADDR);
                 editor.commit();
-                finish();
+                Intent i = getBaseContext().getPackageManager()
+                        .getLaunchIntentForPackage(getBaseContext().getPackageName());
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(i);
             }
         });
 

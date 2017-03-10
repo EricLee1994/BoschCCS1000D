@@ -2,7 +2,7 @@ package android.shgbit.com.boschccs1000d.controllers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.shgbit.com.boschccs1000d.activity.MainActivity;
+import android.shgbit.com.boschccs1000d.activity.MainActivity.*;
 import android.shgbit.com.boschccs1000d.base.BaseApp;
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
 import android.shgbit.com.boschccs1000d.request.waitlist.DeleteWaitRequest;
@@ -19,6 +19,7 @@ import android.shgbit.com.boschccs1000d.models.SpkEntry;
 import android.shgbit.com.boschccs1000d.models.User;
 import android.shgbit.com.boschccs1000d.base.BaseRequest.IHttpCallback;
 import android.shgbit.com.boschccs1000d.activity.MainActivity.IInfoCallback;
+import android.shgbit.com.boschccs1000d.activity.MainActivity.ITraceCallback;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -50,6 +51,21 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
         this.context = context;
     }
 
+
+
+    public ITraceCallback TraceCallback = null;
+    public ISessionCallback iSessionCallback = null;
+    public IInfoCallback infoCallback = null;
+    public void setITraceCallback(ITraceCallback iTraceCallback){
+        TraceCallback = iTraceCallback;
+    }
+    public void setIInfoCallback(IInfoCallback infocallbak){
+        infoCallback = infocallbak;
+    }
+    public void setISessionCallback(ISessionCallback isessionCallback){
+        iSessionCallback = isessionCallback;
+    }
+
     public void Open() {
         // Login Request
         SharedPreferences config = BaseApp.appContext.getSharedPreferences("config", Context.MODE_PRIVATE);
@@ -58,12 +74,14 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
         String CSSDADDR = config.getString("cssaddr", "");
         String CENTPORT = config.getString("centport", "");
         String CENTADDR = config.getString("centaddr", "");
-        if (!USERNAME.isEmpty()&&!PASSWORD.isEmpty()&&!CSSDADDR.isEmpty()&&!CENTADDR.isEmpty()&&!CENTPORT.isEmpty()) {
+        Log.e(TAG,CENTADDR);
+        if (!USERNAME.isEmpty()&&!CSSDADDR.isEmpty()&&!CENTADDR.isEmpty()&&!CENTPORT.isEmpty()) {
             User.USERNAME = USERNAME;
             User.PASSWORD = PASSWORD;
             BaseMgr.CCSD_ADDR = CSSDADDR;
             BaseMgr.CENTADDR = CENTADDR;
             BaseMgr.CENTPORT = CENTPORT;
+            Log.e(TAG,CENTADDR);
             infoCallback.onUIChange(User.USERNAME, User.PASSWORD, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
         }
         Date curDate = new Date(System.currentTimeMillis());
@@ -82,11 +100,13 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
                 Log.e(TAG, "OpenSuccess" + result);
                 User user = new GsonBuilder().create().fromJson(result, User.class);
                 BaseMgr.SESSIONID = user.getSid();
+                iSessionCallback.onGetId(user.getId());
                 Date curDate = new Date(System.currentTimeMillis());
                 Map<String, Object> map=new HashMap<String, Object>();
                 map.put("info", result);
                 map.put("time", BaseMgr.FOMAT.format(curDate));
                 BaseMgr.LOGLIST.add(map);
+
             }
 
             @Override
@@ -140,6 +160,7 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
 
     public void getSpk(boolean isPolling) {
         if (isPolling == true) {
+            Log.e(TAG, "getshortspk");
             getShortSpk();
         } else {
             getLongSpk();
@@ -254,13 +275,15 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
                     spkEntry = gson.fromJson(e, SpkEntry.class);
                     BaseMgr.POINTID = spkEntry.getId();
                 }
+                Log.e(TAG,"id:"+BaseMgr.POINTID);
                 TraceCallback.onSendId(BaseMgr.POINTID);
-                getShortSpk();
                 Date curDate = new Date(System.currentTimeMillis());
                 Map<String, Object> map=new HashMap<String, Object>();
                 map.put("info", "获取当前发言话筒id：" + BaseMgr.POINTID);
                 map.put("time", BaseMgr.FOMAT.format(curDate));
                 BaseMgr.LOGLIST.add(map);
+                getShortSpk();
+
             }
 
             @Override
@@ -290,7 +313,7 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
         });
     }
 
-    public void postSpk() {
+    public void spkPost() {
         //短链接
         //ok
         JSONArray entries = new JSONArray();
@@ -509,10 +532,7 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
 
         // Close TCP
     }
-    public IInfoCallback infoCallback = null;
-    public void setIInfoCallback (IInfoCallback infocallbak){
-        infoCallback = infocallbak;
-    }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("username")) {
@@ -534,8 +554,5 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
         infoCallback.onUIChange(User.USERNAME, User.PASSWORD, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
     }
 
-    public MainActivity.ITraceCallback TraceCallback = null;
-    public void setITraceCallback(MainActivity.ITraceCallback iTraceCallback){
-        TraceCallback = iTraceCallback;
-    }
+
 }

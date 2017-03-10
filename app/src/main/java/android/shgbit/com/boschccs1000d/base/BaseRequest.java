@@ -18,7 +18,7 @@ import java.util.Map;
 public class BaseRequest {
     private Context context;
     private boolean authorization;
-    private String url = BaseMgr.CCSD_ADDR + BaseConst.API_URI;
+    private String url = "http://" + BaseMgr.CCSD_ADDR + BaseConst.API_URI;
     private String functionName;
     private HttpMethod method;
     public String TAG = "BaseRequest";

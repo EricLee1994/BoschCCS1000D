@@ -11,11 +11,13 @@ import android.shgbit.com.boschccs1000d.adapter.LogAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import java.util.Date;
@@ -40,6 +42,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TCPNoticeTrace noticeTrace;
     private boolean isInited = false;
 
+    private long exitTime = 0;
+
     CSS1000DController mCss1000dController = new CSS1000DController(context);
 
     private String TAG = "MainActivity";
@@ -52,10 +56,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initBtnView();
         initData();
         initTcpClient();
-        initTrace();
+        initSpk();
 
     }
+
+    public void initSpk(){
+        ISessionCallback iSessionCallback = new ISessionCallback() {
+            @Override
+            public void onGetId(int mSessionId) {
+                if (mSessionId!=0){
+                    mCss1000dController.getSpk(true);
+                }
+            }
+        };
+        mCss1000dController.setISessionCallback(iSessionCallback);
+    }
     public void initTrace(){
+        Log.e(TAG, "1"+isInited);
         if(isInited == true) {
             ITraceCallback iTraceCallback = new ITraceCallback() {
                 @Override
@@ -116,31 +133,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         noticeTrace = TCPNoticeTrace.getInstance();
 
-//        mBtnInit.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                try {
-//                    Log.e("ZMG", "IP: " + mEdtCentAddr.getText().toString().trim());
-//                    Log.e("ZMG", "Port: " + Integer.parseInt(mEdtCentPort.getText().toString().trim()));
-//
-//                    new Thread(new TCPClient()).start();
-//
-//                } catch (UnknownError e) {
-//                    Log.e("ZMG", "Error msg: " + e);
-//                }
-//            }
-//        });
-//
-//        mBtnSendTrace.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                int rand = Math.abs(new Random().nextInt() % 999);
-//                String msg = String.format("M%03d", rand);
-//
-//                noticeTrace.Notice(msg);
-//            }
-//        });
-
         mImageView.setOnClickListener(this);
 
         IInfoCallback infoCallback = new IInfoCallback() {
@@ -168,6 +160,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.imgview:
                 Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
                 startActivity(intent);
+                mCss1000dController.Close();
                 break;
 
             default:
@@ -178,14 +171,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-
-        mCss1000dController.Open();
-        if (!BaseMgr.SESSIONID.equals(""))
-        {
-            mCss1000dController.getSpk(true);
-        }
-        logAdapter.notifyDataSetChanged();
         Log.e(TAG, "onResume");
+        mCss1000dController.Open();
+
+        Log.e(TAG, "123:"+ BaseMgr.SESSIONID );
+        if (BaseMgr.SESSIONID != null) {
+            Log.d("onresume", "sessionid");
+//            mCss1000dController.getSpk(true);
+        }
+//        if (!BaseMgr.SESSIONID.equals(""))
+//        {
+//            mCss1000dController.getSpk(true);
+//        }
+        logAdapter.notifyDataSetChanged();
+
         // CSS1000DController Start
 
     }
@@ -193,10 +192,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
-        mCss1000dController.Close();
+//        mCss1000dController.Close();
+//        mCss1000dController = null;
         if (isInited = true) {
             noticeTrace.Close();
         }
+        Log.d(TAG, "onPause");
         // CSS1000DController Stop
     }
 
@@ -204,7 +205,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         // CSS1000DController Close
+        mCss1000dController = null;
         BaseMgr.LOGLIST.clear();
+        Log.d(TAG, "onDestroy");
     }
 
 
@@ -213,11 +216,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void run() {
             boolean ret = noticeTrace.Open(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
+            Log.e("tcp", "ret:"+ret);
             if (!ret) {
                 Log.e("ZMG", "Connect with Server failed.");
                 isInited = false;
             } else {
+                Log.e("ZMG", "Connect with Server successfully.");
                 isInited = true;
+                initTrace();
+//               ITraceCallback iTraceCallback = new ITraceCallback() {
+//                    @Override
+//                    public void onSendId(int mPointId) {
+//                        Log.e("sendid", "pointid" + mPointId);
+//                        String msg = String.format("M%03d", mPointId);
+//                        noticeTrace.Notice(msg);
+//                    }
+//                };
+//                mCss1000dController.setITraceCallback(iTraceCallback);
+            }
+            while (ret == false){
+                 ret = noticeTrace.Open(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
             }
         }
     }
@@ -228,5 +246,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public interface ITraceCallback{
         void onSendId(int mPointId);
+    }
+
+    public interface ISessionCallback{
+        void onGetId(int mSessionId);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN){
+            if((System.currentTimeMillis()-exitTime) > 2000){
+                Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();
+                exitTime = System.currentTimeMillis();
+            } else {
+                finish();
+                System.exit(0);
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }

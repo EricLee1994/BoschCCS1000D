@@ -184,6 +184,12 @@
             android:text="Logout" />
 
             <Button
+                android:id="@+id/btnSysinfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sysinfo" />
+
+            <Button
             android:id="@+id/btnSetting"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -215,13 +221,13 @@
         android:layout_height="wrap_content"
         android:text="短连接："/>
         <Button
-        android:id="@+id/btnSpkAvail"
+        android:id="@+id/btnSSpkAvail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="SpeakersAvail" />
 
         <Button
-        android:id="@+id/btnSpksget"
+        android:id="@+id/btnSSpksGet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Speakers(get)" />
@@ -258,13 +264,13 @@
         android:layout_height="wrap_content"
         android:text="短连接："/>
         <Button
-        android:id="@+id/btnWaitAvail"
+        android:id="@+id/btnSWaitAvail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="WaitAvail" />
 
         <Button
-        android:id="@+id/btnWait"
+        android:id="@+id/btnSWaitGet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Wait(get)" />
@@ -314,13 +320,13 @@
         android:layout_height="wrap_content"
         android:text="长连接："/>
         <Button
-        android:id="@+id/btnLongSpkAvail"
+        android:id="@+id/btnLSpkAvail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="SpeakersAvail" />
 
         <Button
-        android:id="@+id/btnLongSpkGet"
+        android:id="@+id/btnLSpkGet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Speakers(get)" />
@@ -336,13 +342,13 @@
         android:layout_height="wrap_content"
         android:text="长连接："/>
         <Button
-        android:id="@+id/btnLongWaitAvail"
+        android:id="@+id/btnLWaitAvail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="WaitAvail" />
 
         <Button
-        android:id="@+id/btnLongWait"
+        android:id="@+id/btnLWaitGet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Wait(get)" />
