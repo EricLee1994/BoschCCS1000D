@@ -53,18 +53,23 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
 
 
 
-    public ITraceCallback TraceCallback = null;
-    public ISessionCallback iSessionCallback = null;
+    public ITraceCallback traceCallback = null;
+    public ISessionCallback sessionCallback = null;
     public IInfoCallback infoCallback = null;
-    public void setITraceCallback(ITraceCallback iTraceCallback){
-        TraceCallback = iTraceCallback;
+    public IShowLogCallback showLogCallback = null;
+    public void setITraceCallback(ITraceCallback traceCallback){
+        this.traceCallback = traceCallback;
     }
-    public void setIInfoCallback(IInfoCallback infocallbak){
-        infoCallback = infocallbak;
+    public void setIInfoCallback(IInfoCallback infoCallback){
+        this.infoCallback = infoCallback;
     }
-    public void setISessionCallback(ISessionCallback isessionCallback){
-        iSessionCallback = isessionCallback;
+    public void setISessionCallback(ISessionCallback sessionCallback){
+        this.sessionCallback = sessionCallback;
     }
+    public void setIShowLogCallback(IShowLogCallback showLogCallback){
+        this.showLogCallback = showLogCallback;
+    }
+
 
     public void Open() {
         // Login Request
@@ -84,12 +89,7 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
             Log.e(TAG,CENTADDR);
             infoCallback.onUIChange(User.USERNAME, User.PASSWORD, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
         }
-        Date curDate = new Date(System.currentTimeMillis());
-        Map<String, Object> map = new HashMap<>();
-        map.put("info", "ConfigCheck "+" Username:"+User.USERNAME + " Password:" + User.PASSWORD + " CCSD_ADDR:" + BaseMgr.CCSD_ADDR + " CentAddr:" +
-                BaseMgr.CENTADDR + " CentPort:" + BaseMgr.CENTPORT);
-        map.put("time",  BaseMgr.FOMAT.format(curDate));
-        BaseMgr.LOGLIST.add(map);
+        showLogCallback.onShowLog("Username:"+ User.USERNAME + " Password:" + User.PASSWORD + " CCSD_ADDR:" + BaseMgr.CCSD_ADDR + " CentAddr:" +BaseMgr.CENTADDR + " CentPort:" + BaseMgr.CENTPORT);
 
         config.registerOnSharedPreferenceChangeListener(this);
         LoginRequest mLoginRequest = new LoginRequest(context, USERNAME, PASSWORD);
@@ -100,23 +100,16 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
                 Log.e(TAG, "OpenSuccess" + result);
                 User user = new GsonBuilder().create().fromJson(result, User.class);
                 BaseMgr.SESSIONID = user.getSid();
-                iSessionCallback.onGetId(user.getId());
-                Date curDate = new Date(System.currentTimeMillis());
-                Map<String, Object> map=new HashMap<String, Object>();
-                map.put("info", result);
-                map.put("time", BaseMgr.FOMAT.format(curDate));
-                BaseMgr.LOGLIST.add(map);
+                sessionCallback.onGetId(user.getId());
+                showLogCallback.onShowLog(result);
 
             }
 
             @Override
             public void onFailure(String result) {
                 Log.e(TAG, "OpenFailure" + result);
-                Date curDate = new Date(System.currentTimeMillis());
-                Map<String, Object> map=new HashMap<String, Object>();
-                map.put("info", result);
-                map.put("time", BaseMgr.FOMAT.format(curDate));
-                BaseMgr.LOGLIST.add(map);
+                showLogCallback.onShowLog(result);
+                Open();
             }
         });
 
@@ -276,7 +269,7 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
                     BaseMgr.POINTID = spkEntry.getId();
                 }
                 Log.e(TAG,"id:"+BaseMgr.POINTID);
-                TraceCallback.onSendId(BaseMgr.POINTID);
+                traceCallback.onSendId(BaseMgr.POINTID);
                 Date curDate = new Date(System.currentTimeMillis());
                 Map<String, Object> map=new HashMap<String, Object>();
                 map.put("info", "获取当前发言话筒id：" + BaseMgr.POINTID);

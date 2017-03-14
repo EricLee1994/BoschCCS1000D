@@ -24,7 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends LogActivity implements View.OnClickListener {
 
     private Context context;
 
@@ -72,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCss1000dController.setISessionCallback(iSessionCallback);
     }
     public void initTrace(){
-        Log.e(TAG, "1"+isInited);
         if(isInited == true) {
             ITraceCallback iTraceCallback = new ITraceCallback() {
                 @Override
@@ -81,37 +80,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     noticeTrace.Notice(msg);
                 }
             };
+
             mCss1000dController.setITraceCallback(iTraceCallback);
         }
-    }
+        while (true){
+
+            try {
+                noticeTrace.Notice("123");
+                Thread.sleep(3*1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }}
 
     public void initTcpClient(){
         try {
             new Thread(new TCPClient()).start();
-            Date curDate = new Date(System.currentTimeMillis());
-            Map<String, Object> map=new HashMap<String, Object>();
-            map.put("info", "initTrace successfully!");
-            map.put("time", BaseMgr.FOMAT.format(curDate));
-            BaseMgr.LOGLIST.add(map);
+
         }catch (UnknownError e){
-            Date curDate = new Date(System.currentTimeMillis());
-            Map<String, Object> map=new HashMap<String, Object>();
-            map.put("info", "initTrace failed!");
-            map.put("time", BaseMgr.FOMAT.format(curDate));
-            BaseMgr.LOGLIST.add(map);
+            showLog("initTrace failed!");
         }
 
     }
 
     public void initData(){
 
-
         BaseMgr.CCSD_ADDR = mEdtCCSAddr.getText().toString();
         BaseMgr.CENTPORT = mEdtCentPort.getText().toString();
         BaseMgr.CENTADDR = mEdtCentAddr.getText().toString();
         User.USERNAME = mEdtUsername.getText().toString();
         User.PASSWORD = mEdtPassword.getText().toString();
-
     }
 
     public void initBtnView(){
@@ -124,12 +122,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mImageView  = (ImageView) findViewById(R.id.imgview);
         //Log
         mLogListView = (ListView) findViewById(R.id.LogListView);
-        Map<String, Object> map=new HashMap<String, Object>();
-        map.put("info", "日志开启！");
-        BaseMgr.LOGLIST.add(map);
+
+        showLog("日志开启！");
         logAdapter = new LogAdapter(this, BaseMgr.LOGLIST);
         mLogListView.setAdapter(logAdapter);
-//        mLogListView.setEnabled(false);
 
         noticeTrace = TCPNoticeTrace.getInstance();
 
@@ -149,6 +145,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         };
         mCss1000dController.setIInfoCallback(infoCallback);
+
+        IShowLogCallback showLogCallback = new IShowLogCallback() {
+            @Override
+            public void onShowLog(String log) {
+                Date curDate = new Date(System.currentTimeMillis());
+                Map<String, Object> map=new HashMap<String, Object>();
+                map.put("info", log);
+                map.put("time", BaseMgr.FOMAT.format(curDate));
+                BaseMgr.LOGLIST.add(map);
+                logAdapter.notifyDataSetChanged();
+            }
+        };
+        mCss1000dController.setIShowLogCallback(showLogCallback);
     }
 
 
@@ -179,21 +188,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d("onresume", "sessionid");
 //            mCss1000dController.getSpk(true);
         }
-//        if (!BaseMgr.SESSIONID.equals(""))
-//        {
-//            mCss1000dController.getSpk(true);
-//        }
         logAdapter.notifyDataSetChanged();
-
-        // CSS1000DController Start
 
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-//        mCss1000dController.Close();
-//        mCss1000dController = null;
         if (isInited = true) {
             noticeTrace.Close();
         }
@@ -216,27 +217,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void run() {
             boolean ret = noticeTrace.Open(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
-            Log.e("tcp", "ret:"+ret);
+            showLog("open noticeTrace:" + ret);
             if (!ret) {
-                Log.e("ZMG", "Connect with Server failed.");
+                Log.e(TAG, "Connect with Server failed.");
                 isInited = false;
             } else {
-                Log.e("ZMG", "Connect with Server successfully.");
+                showLog("initTrace successfully!");
+                Log.e(TAG, "Connect with Server successfully.");
                 isInited = true;
                 initTrace();
-//               ITraceCallback iTraceCallback = new ITraceCallback() {
-//                    @Override
-//                    public void onSendId(int mPointId) {
-//                        Log.e("sendid", "pointid" + mPointId);
-//                        String msg = String.format("M%03d", mPointId);
-//                        noticeTrace.Notice(msg);
-//                    }
-//                };
-//                mCss1000dController.setITraceCallback(iTraceCallback);
             }
             while (ret == false){
-                 ret = noticeTrace.Open(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
+                ret = noticeTrace.Open(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
+//                initTrace();
+                showLog("try connect again.");
             }
+            isInited = true;
+            Log.e(TAG, "Connect with Server successfully1.");
         }
     }
 
@@ -250,6 +247,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public interface ISessionCallback{
         void onGetId(int mSessionId);
+    }
+
+    public interface IShowLogCallback{
+        void onShowLog(String log);
     }
 
     @Override

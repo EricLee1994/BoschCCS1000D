@@ -1,6 +1,9 @@
 package android.shgbit.com.boschccs1000d.base;
 
 import android.content.Context;
+import android.shgbit.com.boschccs1000d.R;
+import android.shgbit.com.boschccs1000d.utils.CommonUtils;
+import android.shgbit.com.boschccs1000d.utils.ToastUtil;
 import android.util.Log;
 
 import org.xutils.common.Callback;
@@ -42,12 +45,12 @@ public class BaseRequest {
     }
 
     public void httpSend(final IHttpCallback callBack) {
-/*        if (!CommonUtils.isNetworkAvailable()) {
-            String netException = context.getResources().getString(R.string.netException);
-            ToastUtil.showToast(netException);
-            callBack.onFailure(BaseConst.HTTP_NO_NETWORK);
-            return;
-        }*/
+//        if (!CommonUtils.isNetworkAvailable()) {
+//            String netException = context.getResources().getString(R.string.netException);
+//            ToastUtil.showToast(netException);
+//            callBack.onFailure(BaseConst.HTTP_NO_NETWORK);
+//            return;
+//        }
 
         if (authorization) {
             params.addHeader("Cookie", "sid=" + BaseMgr.SESSIONID);
@@ -79,8 +82,7 @@ public class BaseRequest {
                 map.put("info", ex.toString());
                 map.put("time", BaseMgr.FOMAT.format(curDate));
                 BaseMgr.LOGLIST.add(map);
-//                LogUtil.customTagPrefix = "abc";
-//                LogUtil.d("abv");
+                callBack.onFailure("");
             }
 
             @Override
