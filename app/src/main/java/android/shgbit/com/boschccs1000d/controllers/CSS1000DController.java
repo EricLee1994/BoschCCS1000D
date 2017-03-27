@@ -27,6 +27,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.wa.util.WALog;
 
 import org.json.JSONArray;
 
@@ -42,10 +43,6 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
 
     Context context;
     public String TAG = "Controller";
-
-    public CSS1000DController() {
-
-    }
 
     public CSS1000DController(Context context) {
         this.context = context;
@@ -73,31 +70,31 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
 
     public void Open() {
         // Login Request
-        SharedPreferences config = BaseApp.appContext.getSharedPreferences("config", Context.MODE_PRIVATE);
-        String USERNAME = config.getString("username", "");
-        String PASSWORD = config.getString("password", "");
-        String CSSDADDR = config.getString("cssaddr", "");
-        String CENTPORT = config.getString("centport", "");
-        String CENTADDR = config.getString("centaddr", "");
-        Log.e(TAG,CENTADDR);
-        if (!USERNAME.isEmpty()&&!CSSDADDR.isEmpty()&&!CENTADDR.isEmpty()&&!CENTPORT.isEmpty()) {
-            User.USERNAME = USERNAME;
-            User.PASSWORD = PASSWORD;
-            BaseMgr.CCSD_ADDR = CSSDADDR;
-            BaseMgr.CENTADDR = CENTADDR;
-            BaseMgr.CENTPORT = CENTPORT;
-            Log.e(TAG,CENTADDR);
-            infoCallback.onUIChange(User.USERNAME, User.PASSWORD, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
-        }
-        showLogCallback.onShowLog("Username:"+ User.USERNAME + " Password:" + User.PASSWORD + " CCSD_ADDR:" + BaseMgr.CCSD_ADDR + " CentAddr:" +BaseMgr.CENTADDR + " CentPort:" + BaseMgr.CENTPORT);
+//        SharedPreferences config = BaseApp.appContext.getSharedPreferences("config", Context.MODE_PRIVATE);
+//        String USERNAME = config.getString("username", "");
+//        String PASSWORD = config.getString("password", "");
+//        String CSSDADDR = config.getString("cssaddr", "");
+//        String CENTPORT = config.getString("centport", "");
+//        String CENTADDR = config.getString("centaddr", "");
+//        Log.e(TAG,CENTADDR);
+//        if (!USERNAME.isEmpty()&&!CSSDADDR.isEmpty()&&!CENTADDR.isEmpty()&&!CENTPORT.isEmpty()) {
+//            User.USERNAME = USERNAME;
+//            User.PASSWORD = PASSWORD;
+//            BaseMgr.CCSD_ADDR = CSSDADDR;
+//            BaseMgr.CENTADDR = CENTADDR;
+//            BaseMgr.CENTPORT = CENTPORT;
+//            infoCallback.onUIChange(User.USERNAME, User.PASSWORD, BaseMgr.CCSD_ADDR, BaseMgr.CENTADDR, BaseMgr.CENTPORT);
+//        }
+//        showLogCallback.onShowLog("Username:"+ User.USERNAME + " Password:" + User.PASSWORD + " CCSD_ADDR:" + BaseMgr.CCSD_ADDR + " CentAddr:" +BaseMgr.CENTADDR + " CentPort:" + BaseMgr.CENTPORT);
 
-        config.registerOnSharedPreferenceChangeListener(this);
-        LoginRequest mLoginRequest = new LoginRequest(context, USERNAME, PASSWORD);
+//        config.registerOnSharedPreferenceChangeListener(this);
+//        LoginRequest mLoginRequest = new LoginRequest(context, USERNAME, PASSWORD);
+        LoginRequest mLoginRequest = new LoginRequest(context, User.USERNAME, User.PASSWORD);
         mLoginRequest.httpSend(new IHttpCallback() {
 
             @Override
             public void onSuccess(String result) {
-                Log.e(TAG, "OpenSuccess" + result);
+                WALog.i(TAG, "OpenSuccess" + result);
                 User user = new GsonBuilder().create().fromJson(result, User.class);
                 BaseMgr.SESSIONID = user.getSid();
                 sessionCallback.onGetId(user.getId());
@@ -107,7 +104,7 @@ public class CSS1000DController implements SharedPreferences.OnSharedPreferenceC
 
             @Override
             public void onFailure(String result) {
-                Log.e(TAG, "OpenFailure" + result);
+                WALog.e(TAG, "OpenFailure" + result);
                 showLogCallback.onShowLog(result);
                 Open();
             }

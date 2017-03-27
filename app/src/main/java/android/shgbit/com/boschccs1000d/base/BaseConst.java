@@ -8,9 +8,11 @@ import android.os.Environment;
 public final class BaseConst {
     public final static boolean isDebug = true;
 
-    public final static String SD_PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
-    public final static String LOC_ROOT = SD_PATH + "DCN_CSSTD";
+    public final static String SD_PATH = Environment.getExternalStorageDirectory().getPath();
+//    public final static String LOC_ROOT = SD_PATH + "DCN_CSSTD";
+    public final static String LOG_PATH = Environment.getExternalStorageDirectory() + "/BoschCCS1000D/Log";
     public final static String API_URI = "/api/";
+    public final static String APP_DIR = "/BoschCCS1000D";
 
     // ---------------------------------- HTTP Function --------------------------------------------
     public static final String FUNC_LOGIN = "login";

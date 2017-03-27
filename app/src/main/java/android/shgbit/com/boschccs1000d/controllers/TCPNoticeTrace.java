@@ -3,6 +3,8 @@ package android.shgbit.com.boschccs1000d.controllers;
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
 import android.util.Log;
 
+import com.wa.util.WALog;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -28,7 +30,7 @@ public class TCPNoticeTrace {
     private boolean isConnected;
     private Socket mTcpClient;
     private DataOutputStream mDataStrm;
-    private String TAG = "TCPNoticeTrace";
+    private static final String TAG = "TCPNoticeTrace";
 
     public boolean Open(String server, int port) {
         needReconnect = true;
@@ -36,47 +38,37 @@ public class TCPNoticeTrace {
     }
 
     private boolean Connect(String server, int port) {
-
+        WALog.i(TAG, "Connnect times");
         mTcpClient = new Socket();
         while (isServerClose(mTcpClient)) {
             try {
-                Log.e(TAG, "C: Server IP: " + server + ":" + port);
+                WALog.i(TAG, "C: Server IP: " + server + ":" + port);
                 InetAddress serverAddr = InetAddress.getByName(server);
                 SocketAddress serverSocket = new InetSocketAddress(serverAddr, port);
 
-                Log.e(TAG, "C: Connecting...");
+                WALog.i(TAG, "C: Connecting...");
                 mTcpClient.connect(serverSocket, 3000);
 
                 isConnected = true;
                 mDataStrm = new DataOutputStream(mTcpClient.getOutputStream());
-//            while (true) {
-//                mTcpClient.sendUrgentData(0xFF);
-//                Thread.sleep(3*1000);
-//            }
-
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-                Log.e(TAG, "open error");
-                isConnected = false;
-//            Connect(server, port);
-            } catch (IOException e) {
-                e.printStackTrace();
-                Log.e(TAG, "open error1");
-                isConnected = false;
-                Connect(server, port);
             } catch (Exception e) {
-                Log.e(TAG, "open error2");
+                WALog.e(TAG, "Connect :" + e.toString());
                 isConnected = false;
+                Connect(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
             }
         }
+        WALog.i(TAG, "isConnected:" + isConnected);
         return isConnected;
     }
 
-    public Boolean isServerClose(Socket socket){
-        try{
+    public Boolean isServerClose(Socket socket) {
+        try {
             socket.sendUrgentData(0);//发送1个字节的紧急数据，默认情况下，服务器端没有开启紧急数据处理，不影响正常通信
+            WALog.i(TAG, "sendUrgentData");
+            Thread.sleep(500);
             return false;
-        }catch(Exception se){
+        } catch (Exception se) {
+            WALog.e(TAG, "sendUrgentData: " + se.toString() );
             isConnected = false;
             return true;
         }
@@ -95,10 +87,12 @@ public class TCPNoticeTrace {
             mDataStrm.writeBytes(new String(msg.getBytes("UTF-8"), "iso-8859-1"));
 
             isSuccess = true;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, "pipe");
+            WALog.e(TAG, "Notice:" + e.toString());
+            isConnected = false;
             Connect(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
+
         }
 
         return isSuccess;
@@ -110,6 +104,7 @@ public class TCPNoticeTrace {
                 isConnected = false;
                 mTcpClient.close();
                 mDataStrm.close();
+                WALog.i(TAG, "TCPClient Close.");
             }
         } catch (IOException e) {
             e.printStackTrace();
