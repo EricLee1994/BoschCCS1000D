@@ -3,6 +3,8 @@ package android.shgbit.com.boschccs1000d.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Environment;
+import android.os.Process;
 import android.shgbit.com.boschccs1000d.R;
 import android.shgbit.com.boschccs1000d.base.BaseApp;
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
@@ -11,6 +13,8 @@ import android.shgbit.com.boschccs1000d.controllers.TCPNoticeTrace;
 import android.shgbit.com.boschccs1000d.models.User;
 import android.shgbit.com.boschccs1000d.adapter.LogAdapter;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.Xml;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -21,11 +25,19 @@ import android.widget.Toast;
 
 import com.wa.util.WALog;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends LogActivity implements View.OnClickListener,SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends LogActivity implements View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private Context context;
 
@@ -42,8 +54,9 @@ public class MainActivity extends LogActivity implements View.OnClickListener,Sh
 
     private TCPNoticeTrace noticeTrace;
     private boolean isInited = false;
-
+    private String mac;
     private long exitTime = 0;
+    private String MD5Config;
 
     CSS1000DController mCss1000dController = new CSS1000DController(context);
 
@@ -57,19 +70,103 @@ public class MainActivity extends LogActivity implements View.OnClickListener,Sh
         initBtnView();
         initSP();
         initData();
-        initTcpClient();
-        initSpk();
 
     }
 
-    public void initSP(){
+    public static String loadFileAsString(String fileName) throws Exception {
+        FileReader reader = new FileReader(fileName);
+        String text = loadReaderAsString(reader);
+        reader.close();
+        return text;
+    }
+
+    public static String loadReaderAsString(Reader reader) throws Exception {
+        StringBuilder builder = new StringBuilder();
+        char[] buffer = new char[4096];
+        int readLength = reader.read(buffer);
+        while (readLength >= 0) {
+            builder.append(buffer, 0, readLength);
+            readLength = reader.read(buffer);
+        }
+        return builder.toString();
+    }
+
+    public boolean compareMd5() {
+        try {
+            mac = loadFileAsString("/sys/class/net/eth0/address").toUpperCase().substring(0, 17);
+            mac = mac.replaceAll(":", "-");
+            String md5 = stringToMD5(mac.toUpperCase());
+            md5 = md5.replaceAll(".{2}(?!$)", "$0-").toUpperCase();
+            if (MD5ConfigLoad()){
+                Log.e("config", MD5Config);
+                Log.e("dai", md5);
+               return MD5Config.equals(md5);
+            }
+            WALog.e("MD5", "MD5 比较错误。");
+            return false;
+        } catch (Exception e) {
+            WALog.e("MD5", e.toString());
+            return false;
+        }
+    }
+
+    public boolean MD5ConfigLoad() {
+        try {
+            String MD5Path = Environment.getExternalStorageDirectory().getPath() + "/Shgbit/md5.txt";
+            if (new File(MD5Path).exists() == false) {
+                WALog.e(TAG, "MD5 config not found!");
+                return false;
+            }
+            String line;
+            FileReader fr = new FileReader(MD5Path);
+            BufferedReader br = new BufferedReader(fr);
+            StringBuffer sb = new StringBuffer("");
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+                sb.append("\n");
+            }
+            MD5Config = sb.toString();
+            MD5Config = MD5Config.substring(3,50);
+            br.close();
+            fr.close();
+        } catch (Exception e) {
+            WALog.e(TAG, "MD5 :" + e.toString());
+            return false;
+        }
+        return true;
+    }
+
+    public static String stringToMD5(String string) {
+        byte[] hash;
+
+        try {
+            hash = MessageDigest.getInstance("MD5").digest(string.getBytes("UTF-8"));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        StringBuilder hex = new StringBuilder(hash.length * 2);
+        for (byte b : hash) {
+            if ((b & 0xFF) < 0x10)
+                hex.append("0");
+            hex.append(Integer.toHexString(b & 0xFF));
+        }
+
+        return hex.toString();
+    }
+
+    public void initSP() {
         SharedPreferences config = BaseApp.appContext.getSharedPreferences("config", Context.MODE_PRIVATE);
         String USERNAME = config.getString("username", "");
         String PASSWORD = config.getString("password", "");
         String CSSDADDR = config.getString("cssaddr", "");
         String CENTPORT = config.getString("centport", "");
         String CENTADDR = config.getString("centaddr", "");
-        if (!USERNAME.isEmpty()&&!CSSDADDR.isEmpty()&&!CENTADDR.isEmpty()&&!CENTPORT.isEmpty()) {
+        if (!USERNAME.isEmpty() && !CSSDADDR.isEmpty() && !CENTADDR.isEmpty() && !CENTPORT.isEmpty()) {
             User.USERNAME = USERNAME;
             User.PASSWORD = PASSWORD;
             BaseMgr.CCSD_ADDR = CSSDADDR;
@@ -201,7 +298,13 @@ public class MainActivity extends LogActivity implements View.OnClickListener,Sh
     @Override
     protected void onResume() {
         super.onResume();
-        mCss1000dController.Open();
+        if(compareMd5()) {
+            initTcpClient();
+            initSpk();
+            mCss1000dController.Open();
+        }else {
+            showLog("MD5校验不正确！");
+        }
 
         if (BaseMgr.SESSIONID != null) {
             WALog.i("onresume", BaseMgr.SESSIONID);
@@ -272,7 +375,7 @@ public class MainActivity extends LogActivity implements View.OnClickListener,Sh
                 }
                 while (!ret) {
                     ret = noticeTrace.Open(BaseMgr.CENTADDR, Integer.parseInt(BaseMgr.CENTPORT));
-                    WALog.e(TAG, "connect again and ret :" + ret );
+                    WALog.e(TAG, "connect again and ret :" + ret);
                     showLog("try connect again.");
                 }
                 isInited = true;
@@ -299,7 +402,7 @@ public class MainActivity extends LogActivity implements View.OnClickListener,Sh
         void onShowLog(String log);
     }
 
-    public void onUIChange (String mUserName, String mPassword, String mCssdAddr, String mCentAddr, String mCentPort){
+    public void onUIChange(String mUserName, String mPassword, String mCssdAddr, String mCentAddr, String mCentPort) {
         mEdtUsername.setText(mUserName);
         mEdtPassword.setText(mPassword);
         mEdtCCSAddr.setText(mCssdAddr);

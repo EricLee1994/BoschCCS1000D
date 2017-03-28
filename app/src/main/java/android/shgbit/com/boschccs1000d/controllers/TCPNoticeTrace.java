@@ -1,7 +1,6 @@
 package android.shgbit.com.boschccs1000d.controllers;
 
 import android.shgbit.com.boschccs1000d.base.BaseMgr;
-import android.util.Log;
 
 import com.wa.util.WALog;
 
@@ -11,7 +10,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.net.UnknownHostException;
 
 /**
  * Created by user on 2016-12-13.
